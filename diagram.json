@@ -4,34 +4,12 @@
   "editor": "wokwi",
   "parts": [
     { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": -4.76, "attrs": {} },
-    {
-      "type": "wokwi-resistor",
-      "id": "r1",
-      "top": 109.55,
-      "left": -76.8,
-      "attrs": { "value": "1000" }
-    },
-    {
-      "type": "wokwi-resistor",
-      "id": "r2",
-      "top": 119.15,
-      "left": -76.8,
-      "attrs": { "value": "1000" }
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led1",
-      "top": 34.8,
-      "left": -111.4,
-      "attrs": { "color": "blue" }
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led2",
-      "top": 63.6,
-      "left": -140.2,
-      "attrs": { "color": "green" }
-    }
+    { "type": "wokwi-resistor", "id": "r1", "top": 109.55, "left": -76.8, "attrs": { "value": "1000" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": 119.15, "left": -76.8, "attrs": { "value": "1000" } },
+    { "type": "wokwi-led", "id": "led1", "top": 34.8, "left": -111.4, "attrs": { "color": "blue" } },
+    { "type": "wokwi-led", "id": "led2", "top": 63.6, "left": -140.2, "attrs": { "color": "green" } },
+    { "type": "wokwi-dht22", "id": "tempSensor", "top": 50, "left": 50, "attrs": {} },
+    { "type": "wokwi-button", "id": "button1", "top": 70, "left": 100, "attrs": { "color": "gray" } }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
@@ -41,7 +19,12 @@
     [ "esp:GND.1", "led2:C", "black", [ "h0" ] ],
     [ "esp:GND.1", "led1:C", "black", [ "h0" ] ],
     [ "esp:26", "r1:2", "green", [ "h0" ] ],
-    [ "r2:2", "esp:27", "green", [ "v0" ] ]
+    [ "r2:2", "esp:27", "green", [ "v0" ] ],
+    [ "esp:15", "tempSensor:SDA", "blue", [] ],
+    [ "esp:GND.1", "tempSensor:GND", "black", [] ],
+    [ "esp:VCC", "tempSensor:VCC", "red", [] ],
+    [ "esp:13", "button1:1", "green", [] ],
+    [ "esp:GND.1", "button1:2", "black", [] ]
   ],
   "dependencies": {}
 }
