@@ -17,24 +17,65 @@
 #define MQ9_PIN A0
 #define BLUE_LED_PIN 26
 
-DHT dht(DHTPIN, DHTTYPE);
+namespace SensorData {
+  DHT dht(DHTPIN, DHTTYPE);
+  float temperature = 0.0;
+  float humidity = 0.0;
+
+  void readSensors() {
+    temperature = dht.readTemperature();
+    humidity = dht.readHumidity();
+  }
+
+  bool isValid() {
+    return !isnan(temperature) && !isnan(humidity);
+  }
+}
+
+namespace LEDControl {
+  void setup() {
+    pinMode(GREEN_LED_PIN, OUTPUT);
+    pinMode(BLUE_LED_PIN, OUTPUT);
+    digitalWrite(GREEN_LED_PIN, LOW); // Apaga el LED Verde inicialmente
+    digitalWrite(BLUE_LED_PIN, LOW);  // Apaga el LED Azul inicialmente
+  }
+
+  void setGreenLED(bool state) {
+    digitalWrite(GREEN_LED_PIN, state ? HIGH : LOW);
+  }
+
+  void setBlueLED(bool state) {
+    digitalWrite(BLUE_LED_PIN, state ? HIGH : LOW);
+  }
+}
+
+namespace GasDetection {
+  int gasLevel = 0;
+
+  void readGasLevel() {
+    gasLevel = analogRead(MQ9_PIN);
+  }
+
+  bool isGasDetected() {
+    return gasLevel > 500;
+  }
+}
+
+namespace WiFiConfig {
+  void connect() {
+    setupWiFi();
+  }
+}
+
 WebServer server(80);
 
-float temperature = 0.0;
-float humidity = 0.0;
-
-void setup(void)
-{
+void setup(void) {
   Serial.begin(115200);
-  dht.begin();
-  pinMode(GREEN_LED_PIN, OUTPUT);
-  pinMode(BLUE_LED_PIN, OUTPUT);
-  pinMode(MQ9_PIN, INPUT);
-  digitalWrite(GREEN_LED_PIN, LOW); // Apaga el LED Verde inicialmente
-  digitalWrite(BLUE_LED_PIN, LOW);  // Apaga el LED Azul inicialmente
+  SensorData::dht.begin();
+  LEDControl::setup();
 
   // Conectar al WiFi usando la función modularizada
-  setupWiFi();
+  WiFiConfig::connect();
 
   // Definir las rutas del servidor
   server.on("/", sendHtml);               // Llamada a la función sendHtml en WebHandlers.cpp
@@ -44,78 +85,52 @@ void setup(void)
   Serial.println("HTTP server started");
 }
 
-void loop(void)
-{
+void loop(void) {
   // Lee los datos del sensor si no está en modo de incremento
-  if (!increaseTemperature)
-  {
-    temperature = dht.readTemperature();
-    humidity = dht.readHumidity();
+  if (!increaseTemperature) {
+    SensorData::readSensors();
   }
 
   // Verifica si el sensor funciona correctamente
-  if (isnan(temperature) || isnan(humidity))
-  {
+  if (!SensorData::isValid()) {
     Serial.println("Error leyendo el sensor DHT!");
-  }
-  else
-  {
+  } else {
     Serial.print("Temperature: ");
-    Serial.print(temperature);
+    Serial.print(SensorData::temperature);
     Serial.print(" °C, Humidity: ");
-    Serial.print(humidity);
+    Serial.print(SensorData::humidity);
     Serial.println(" %");
   }
 
   // Controla el incremento de temperatura
-  if (increaseTemperature)
-  {
-    temperature += 2.0;
-    if (temperature >= 42.0)
-    {
+  if (increaseTemperature) {
+    SensorData::temperature += 2.0;
+    if (SensorData::temperature >= 42.0) {
       increaseTemperature = false; // Detiene el incremento al llegar a 42 grados
     }
     delay(2000); // Espera 2 segundos para cada incremento
   }
 
   // Enciende el LED verde si la temperatura es igual o superior a 38 grados
-  if (temperature >= 38.0)
-  {
-    digitalWrite(GREEN_LED_PIN, HIGH);
-  }
-  else
-  {
-    digitalWrite(GREEN_LED_PIN, LOW);
-  }
+  LEDControl::setGreenLED(SensorData::temperature >= 38.0);
 
   server.handleClient();  // Maneja las solicitudes del servidor web
 
   // Simulación de detección de gas (si se activa)
-  if (simulateGasDetection)
-  {
-    int gasLevel = analogRead(MQ9_PIN);
+  if (simulateGasDetection) {
+    GasDetection::readGasLevel();
     Serial.print("Gas Level: ");
-    Serial.println(gasLevel);
+    Serial.println(GasDetection::gasLevel);
 
-    if (gasLevel > 500)
-    {
-      digitalWrite(BLUE_LED_PIN, HIGH);  // Enciende el LED azul si se detecta gas
-    }
-    else
-    {
-      digitalWrite(BLUE_LED_PIN, LOW);   // Apaga el LED azul si no se detecta gas
-    }
+    LEDControl::setBlueLED(GasDetection::isGasDetected());
 
     delay(2000); // Ajusta el tiempo de muestreo de gas según sea necesario
-  }
-  else
-  {
-    digitalWrite(BLUE_LED_PIN, LOW);  // Apaga el LED azul si no se simula la detección de gas
+  } else {
+    LEDControl::setBlueLED(false);  // Apaga el LED azul si no se simula la detección de gas
   }
 
   // Restablece la simulación después de 5 segundos
-  if (simulateGasDetection)
-  {
+  if (simulateGasDetection) {
     delay(5000);
     simulateGasDetection = false;
   }
