@@ -11,6 +11,8 @@
 #define DHTPIN 15         // Pin de datos del DHT
 #define DHTTYPE DHT22     // Cambia esto a DHT11 si estás usando un DHT11
 #define GREEN_LED_PIN 27  // Pin del LED verde
+#define MQ9_PIN A0
+#define BLUE_LED_PIN 26
 
 
 DHT dht(DHTPIN, DHTTYPE);
@@ -19,6 +21,8 @@ WebServer server(80);
 float temperature = 0.0;
 float humidity = 0.0;
 bool increaseTemperature = false;  // Bandera para activar el incremento
+bool simulateGasDetection = false;
+
 
 void sendHtml() {
   String response = getHtmlResponse();
@@ -32,11 +36,20 @@ void increaseTemperatureHandler() {
   server.send(303);
 }
 
+void triggerGasHandler() {
+  simulateGasDetection = true;
+  server.sendHeader("Location", "/");
+  server.send(303);
+}
+
 void setup(void) {
   Serial.begin(115200);
   dht.begin();
   pinMode(GREEN_LED_PIN, OUTPUT);
+  pinMode(BLUE_LED_PIN, OUTPUT);
+    pinMode(MQ9_PIN, INPUT);
   digitalWrite(GREEN_LED_PIN, LOW);  // Apaga el LED inicialmente
+    digitalWrite(BLUE_LED_PIN, LOW);
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD, WIFI_CHANNEL);
   Serial.print("Connecting to WiFi ");
@@ -50,6 +63,7 @@ void setup(void) {
 
   server.on("/", sendHtml);
   server.on("/increaseTemp", increaseTemperatureHandler);
+    server.on("/triggerGas", triggerGasHandler);
   server.begin();
   Serial.println("HTTP server started");
 }
@@ -89,5 +103,27 @@ void loop(void) {
   }
 
   server.handleClient();
+   if (simulateGasDetection) {
+    int gasLevel = analogRead(MQ9_PIN);
+    Serial.print("Gas Level: ");
+    Serial.println(gasLevel);
+
+    if (gasLevel > 500) {
+      digitalWrite(BLUE_LED_PIN, HIGH);
+    } else {
+      digitalWrite(BLUE_LED_PIN, LOW);
+    }
+
+    delay(2000); // Ajusta el tiempo de muestreo de gas según sea necesario
+  } else {
+    // Asegúrate de que el LED esté apagado si no se está simulando la detección
+    digitalWrite(BLUE_LED_PIN, LOW);
+  }
+
+  // Restablece la simulación después de 5 segundos
+  if (simulateGasDetection) {
+    delay(5000);
+    simulateGasDetection = false;
+  }
   delay(2000);  // Actualiza cada 2 segundos
 }

@@ -9,7 +9,8 @@
     { "type": "wokwi-led", "id": "led1", "top": 34.8, "left": -111.4, "attrs": { "color": "blue" } },
     { "type": "wokwi-led", "id": "led2", "top": 63.6, "left": -140.2, "attrs": { "color": "green" } },
     { "type": "wokwi-dht22", "id": "tempSensor", "top": 50, "left": 50, "attrs": {} },
-    { "type": "wokwi-button", "id": "button1", "top": 70, "left": 100, "attrs": { "color": "gray" } }
+    { "type": "wokwi-button", "id": "button1", "top": 70, "left": 100, "attrs": { "color": "gray" } },
+    { "type": "wokwi-mq9", "id": "mq9", "top": 150, "left": -50, "attrs": {} }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
@@ -24,7 +25,10 @@
     [ "esp:GND.1", "tempSensor:GND", "black", [] ],
     [ "esp:VCC", "tempSensor:VCC", "red", [] ],
     [ "esp:13", "button1:1", "green", [] ],
-    [ "esp:GND.1", "button1:2", "black", [] ]
+    [ "esp:GND.1", "button1:2", "black", [] ],
+    [ "mq9:VCC", "esp:VCC", "red", [ "v-20" ] ],
+    [ "mq9:GND", "esp:GND.1", "black", [ "v-10" ] ],
+    [ "mq9:AOUT", "esp:A0", "blue", [ "h-10" ] ]
   ],
   "dependencies": {}
 }
