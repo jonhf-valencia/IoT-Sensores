@@ -58,10 +58,8 @@ El objetivo de este proyecto es ofrecer una solución que permita mejorar la cal
   
 ### Configuración del Proyecto:
 
-- Archivos Necesarios: Asegúrate de tener los archivos main.cpp, sensors.h, sensors.cpp, actuators.h, actuators.cpp y config.h configurados como se ha descrito previamente en el contexto del proyecto. Coloca estos archivos en la raíz de tu proyecto en Visual Studio Code.
-
 - Archivos de Configuración:
-    1. En tu archivo platformio.ini, asegúrate de que está configurado para trabajar con el ESP32. El archivo platformio.ini ya contiene configuraciones necesarias, pero asegúrate de revisar que las dependencias de librerías están correctamente instaladas.
+1. En tu archivo platformio.ini, asegúrate de que está configurado para trabajar con el ESP32. El archivo platformio.ini ya contiene configuraciones necesarias, pero asegúrate de revisar que las dependencias de librerías están correctamente instaladas.
        
 ````
 [env:esp32]
