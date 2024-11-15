@@ -34,3 +34,65 @@ El objetivo de este proyecto es ofrecer una solución que permita mejorar la cal
 - **Wokwi Simulator**
   
 ## Instalación
+
+### 1. Entorno de Desarrollo (VS Code con Platformio):
+- Instalar Visual Studio Code: Si aún no tienes Visual Studio Code, descárgalo e instálalo desde la página oficial de Visual Studio Code.
+- Instalar Platformio en VS Code:
+  - Abre Visual Studio Code.
+  - Ve a la sección de extensiones (Ctrl+Shift+X).
+  - Busca "Platformio" y haz clic en "Instalar".
+  - Platformio añadirá soporte para plataformas de microcontroladores como Arduino, incluyendo el ESP32.
+  
+### Instalar Librerías Necesarias:
+
+- DHT Sensor Library de Adafruit:
+    1. Abre tu proyecto en Visual Studio Code.
+    2. Ve a la sección de Platformio en la barra lateral izquierda.
+    3. Haz clic en Lib Manager.
+    4. En la barra de búsqueda, escribe DHT sensor library y selecciona "adafruit/DHT sensor library @ ^1.4.3".
+    5. Haz clic en Install para añadir la librería a tu proyecto.
+       
+- Adafruit Unified Sensor:
+    1. En el Lib Manager, busca Adafruit Unified Sensor @ ^1.1.6.
+    2. Selecciónalo y haz clic en Install.
+  
+### Configuración del Proyecto:
+
+- Archivos Necesarios: Asegúrate de tener los archivos main.cpp, sensors.h, sensors.cpp, actuators.h, actuators.cpp y config.h configurados como se ha descrito previamente en el contexto del proyecto. Coloca estos archivos en la raíz de tu proyecto en Visual Studio Code.
+
+- Archivos de Configuración:
+    1. En tu archivo platformio.ini, asegúrate de que está configurado para trabajar con el ESP32. El archivo platformio.ini ya contiene configuraciones necesarias, pero asegúrate de revisar que las dependencias de librerías están correctamente instaladas.
+       
+````
+[env:esp32]
+platform = espressif32
+framework = arduino
+board = esp32dev
+lib_deps = 
+    adafruit/DHT sensor library @ ^1.4.3
+    adafruit/Adafruit Unified Sensor @ ^1.1.6
+````
+
+Simulación en Wokwi:
+
+Instalar Wokwi Simulator: Accede a Wokwi Simulator y regístrate si aún no lo has hecho.
+
+Crear Circuito Simulado:
+
+Crea un nuevo proyecto en Wokwi seleccionando "Create new circuit".
+Añade componentes necesarios: Arduino Uno, DHT22 y MQ-135.
+Conecta los componentes como se ha descrito en el diseño del circuito.
+En el editor de código, copia y pega el código de main.cpp que se ha preparado previamente.
+Configurar la Simulación:
+
+Ajusta las configuraciones de red si deseas probar la simulación de la comunicación con un dispositivo real, como el ESP32. Configura wokwi en tu archivo platformio.ini para redirigir el tráfico a través de localhost:8180 al puerto 80 del simulador ESP32.
+El archivo de configuración platformio.ini se verá así:
+ini
+Copiar código
+[env:esp32]
+platform = espressif32
+framework = arduino
+board = esp32dev
+lib_deps = 
+    adafruit/DHT sensor library @ ^1.4.3
+    adafruit/Adafruit Unified Sensor @ ^1.1.6
