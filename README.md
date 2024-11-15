@@ -73,26 +73,25 @@ lib_deps =
     adafruit/Adafruit Unified Sensor @ ^1.1.6
 ````
 
-Simulación en Wokwi:
+### Simulación en Wokwi:
 
-Instalar Wokwi Simulator: Accede a Wokwi Simulator y regístrate si aún no lo has hecho.
+- Instalar Wokwi Simulator: Accede a Wokwi Simulator y regístrate si aún no lo has hecho.
 
-Crear Circuito Simulado:
+## Ejecución del código 
 
-Crea un nuevo proyecto en Wokwi seleccionando "Create new circuit".
-Añade componentes necesarios: Arduino Uno, DHT22 y MQ-135.
-Conecta los componentes como se ha descrito en el diseño del circuito.
-En el editor de código, copia y pega el código de main.cpp que se ha preparado previamente.
-Configurar la Simulación:
+Para ejecutar el código, primero es necesario compilarlo utilizando el comando build de Platformio. Una vez que el código haya sido compilado correctamente, accede al archivo diagram.json y ejecuta el proyecto haciendo clic en el botón verde de Play.
+![image](https://github.com/user-attachments/assets/e4e393c6-0a7d-4e94-b672-67dc24758c3a)
 
-Ajusta las configuraciones de red si deseas probar la simulación de la comunicación con un dispositivo real, como el ESP32. Configura wokwi en tu archivo platformio.ini para redirigir el tráfico a través de localhost:8180 al puerto 80 del simulador ESP32.
-El archivo de configuración platformio.ini se verá así:
-ini
-Copiar código
-[env:esp32]
-platform = espressif32
-framework = arduino
-board = esp32dev
-lib_deps = 
-    adafruit/DHT sensor library @ ^1.4.3
-    adafruit/Adafruit Unified Sensor @ ^1.1.6
+
+## Control de Sensores
+
+Para interactuar con los sensores del circuito, abre la siguiente página local en tu navegador:
+
+```
+http://localhost:8180/
+```
+
+En la terminal, podrás observar cómo responden los sensores al presionar los botones disponibles en la interfaz web.
+![image](https://github.com/user-attachments/assets/c2135c47-35c1-42e6-8743-12d65e12003f)
+
+
