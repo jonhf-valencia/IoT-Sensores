@@ -6,11 +6,20 @@
 #include "WiFiSetup.h"
 #include "Globals.h"  // Incluir el archivo con las variables globales
 #include "WebHandlers.h" // Incluir las funciones del servidor web
+#include <HTTPClient.h> // Librería para enviar peticiones HTTP
 
 // Definir las credenciales del WiFi
 #define WIFI_SSID "Wokwi-GUEST"
 #define WIFI_PASSWORD ""
 #define WIFI_CHANNEL 6
+
+// Credenciales de Ubidots
+#define UBIDOTS_API_KEY Agrega tu propia API Key"
+#define UBIDOTS_TOKEN "Agrega tu propio token"
+#define UBIDOTS_URL "Agrega tu propia url"
+
+// Etiqueta del dispositivo en Ubidots
+#define DEVICE_LABEL "tracking_sensors_code"
 
 // Configuración de los pines del DHT y LEDs
 #define DHTPIN 15        // Pin del sensor DHT
@@ -43,8 +52,8 @@ namespace LEDControl {
   void setup() {
     pinMode(GREEN_LED_PIN, OUTPUT);
     pinMode(BLUE_LED_PIN, OUTPUT);
-    digitalWrite(GREEN_LED_PIN, LOW); // Apagar el LED verde al inicio
-    digitalWrite(BLUE_LED_PIN, LOW);  // Apagar el LED azul al inicio
+    digitalWrite(GREEN_LED_PIN, LOW);
+    digitalWrite(BLUE_LED_PIN, LOW);
   }
 
   // Función para encender o apagar el LED verde
@@ -73,11 +82,52 @@ namespace GasDetection {
   }
 }
 
+// Configurar conexión WiFi
+void connectWiFi() {
+  Serial.println("Conectando al WiFi...");
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Intentando conectar...");
+  }
+  Serial.println("Conectado al WiFi.");
+}
+
 // Namespace para la configuración de WiFi
 namespace WiFiConfig {
   // Conectar al WiFi utilizando la configuración predefinida
   void connect() {
     setupWiFi();  // Función definida en WiFiSetup.h
+  }
+}
+
+// Enviar datos a Ubidots
+void sendToUbidots(float temperature, float humidity, int gasLevel) {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    String url = UBIDOTS_URL + String(DEVICE_LABEL) + "/";
+    String payload = "{";
+    payload += "\"temperature\": " + String(temperature) + ",";
+    payload += "\"humidity\": " + String(humidity) + ",";
+    payload += "\"gas_level\": " + String(gasLevel);
+    payload += "}";
+
+    http.begin(url);
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("X-Auth-Token", UBIDOTS_TOKEN);
+
+    int httpResponseCode = http.POST(payload);
+
+    if (httpResponseCode > 0) {
+      Serial.println("Datos enviados a Ubidots.");
+      Serial.println("Código de respuesta: " + String(httpResponseCode));
+    } else {
+      Serial.println("Error enviando datos: " + http.errorToString(httpResponseCode));
+    }
+
+    http.end();
+  } else {
+    Serial.println("No hay conexión WiFi.");
   }
 }
 
@@ -92,26 +142,21 @@ void setup(void) {
 
   WiFiConfig::connect();     // Conectar al WiFi
 
-  // Definir las rutas del servidor
-  server.on("/", sendHtml);               // Ruta principal para enviar HTML
-  server.on("/increaseTemp", increaseTemperatureHandler);  // Handler para aumentar la temperatura
-  server.on("/triggerGas", triggerGasHandler);  // Handler para simular detección de gas
-  server.begin();  // Iniciar el servidor web
+  server.on("/", sendHtml);
+  server.on("/increaseTemp", increaseTemperatureHandler);
+  server.on("/triggerGas", triggerGasHandler);
+  server.begin();
   Serial.println("HTTP server started");
 }
 
-// Bucle principal del programa
-void loop(void) {
-  // Leer los datos del sensor solo si no estamos en modo de incremento de temperatura
+void loop() {
   if (!increaseTemperature) {
     SensorData::readSensors();
   }
 
-  // Verificar si los datos del sensor son válidos
   if (!SensorData::isValid()) {
     Serial.println("Error leyendo el sensor DHT!");
   } else {
-    // Mostrar los datos de temperatura y humedad en el monitor serial
     Serial.print("Temperature: ");
     Serial.print(SensorData::temperature);
     Serial.print(" °C, Humidity: ");
@@ -119,39 +164,34 @@ void loop(void) {
     Serial.println(" %");
   }
 
-  // Modo de incremento de temperatura (si está habilitado)
   if (increaseTemperature) {
-    SensorData::temperature += 2.0; // Aumentar la temperatura en 2 grados
+    SensorData::temperature += 2.0;
     if (SensorData::temperature >= 42.0) {
-      increaseTemperature = false; // Detener el incremento al alcanzar los 42 grados
+      increaseTemperature = false;
     }
-    delay(2000); // Espera de 2 segundos entre incrementos
+    delay(2000);
   }
 
-  // Enciende el LED verde si la temperatura es mayor o igual a 38 grados
   LEDControl::setGreenLED(SensorData::temperature >= 38.0);
+  server.handleClient();
 
-  server.handleClient();  // Manejar las solicitudes del servidor web
-
-  // Simulación de detección de gas (si está activada)
   if (simulateGasDetection) {
-    GasDetection::readGasLevel();  // Leer el nivel de gas
+    GasDetection::readGasLevel();
     Serial.print("Gas Level: ");
     Serial.println(GasDetection::gasLevel);
-
-    // Controlar el LED azul según si se detecta gas
     LEDControl::setBlueLED(GasDetection::isGasDetected());
-
-    delay(2000); // Ajusta el tiempo de muestreo de gas
+    delay(2000);
   } else {
-    LEDControl::setBlueLED(false);  // Apagar el LED azul si no se simula la detección de gas
+    LEDControl::setBlueLED(false);
   }
 
-  // Restablecer la simulación de gas después de 5 segundos
   if (simulateGasDetection) {
-    delay(5000);  // Espera 5 segundos antes de desactivar la simulación
+    delay(5000);
     simulateGasDetection = false;
   }
 
-  delay(2000); // Actualizar cada 2 segundos
+  // Enviar datos a Ubidots cada 5 segundos
+  sendToUbidots(SensorData::temperature, SensorData::humidity, GasDetection::gasLevel);
+
+  delay(5000); // Actualizar cada 5 segundos
 }
